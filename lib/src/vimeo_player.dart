@@ -1,6 +1,5 @@
-import 'dart:developer' as dev;
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 /// Vimeo video player with customizable controls and event callbacks using the InAppWebView
@@ -46,6 +45,26 @@ class VimeoVideoPlayer extends StatelessWidget {
   /// Default value: [true]
   final bool enableDNT;
 
+  /// Defines the hash for the unlisted vimeo video
+  /// [privacyHash] is needed only for unlisted video.
+  final String? privacyHash;
+
+  /// Used to display the profile avatar
+  ///
+  /// Default value: [false]
+  final bool portrait;
+
+  /// Used to display the vimeo logo
+  ///
+  /// Default value: [false]
+  final bool badge;
+
+  /// Used to enable fullscreen mode when playing
+  /// When enabled, the player go full screen when play is hit
+  ///
+  /// Default value: [false]
+  final bool enableFullScreenOnPlay;
+
   /// Defines the background color of the InAppWebView
   ///
   /// Default Value: [Colors.black]
@@ -88,6 +107,15 @@ class VimeoVideoPlayer extends StatelessWidget {
     WebResourceError error,
   )? onInAppWebViewReceivedError;
 
+  /// Defines a callback function triggered when the WebView enters full screen
+  final void Function(InAppWebViewController controller)? onEnterFullscreen;
+
+  /// Defines a callback function triggered when the WebView exits full screen
+  final void Function(InAppWebViewController controller)? onExitFullscreen;
+
+  /// Defines a callback function that notifies current video position
+  final ValueChanged<double>? currentPositionInSeconds;
+
   VimeoVideoPlayer({
     super.key,
     required this.videoId,
@@ -98,6 +126,10 @@ class VimeoVideoPlayer extends StatelessWidget {
     this.showByline = false,
     this.showControls = true,
     this.enableDNT = true,
+    this.privacyHash,
+    this.portrait = false,
+    this.badge = false,
+    this.enableFullScreenOnPlay = false,
     this.backgroundColor = Colors.black,
     this.onReady,
     this.onPlay,
@@ -108,6 +140,9 @@ class VimeoVideoPlayer extends StatelessWidget {
     this.onInAppWebViewLoadStart,
     this.onInAppWebViewLoadStop,
     this.onInAppWebViewReceivedError,
+    this.onEnterFullscreen,
+    this.onExitFullscreen,
+    this.currentPositionInSeconds,
   }) : assert(videoId.isNotEmpty, 'videoId cannot be empty!');
 
   @override
@@ -117,6 +152,8 @@ class VimeoVideoPlayer extends StatelessWidget {
         mediaPlaybackRequiresUserGesture: false,
         allowsInlineMediaPlayback: true,
         useHybridComposition: true,
+        iframeAllow: "autoplay; fullscreen; picture-in-picture",
+        iframeAllowFullscreen: true,
       ),
       initialData: InAppWebViewInitialData(
         data: _buildHtmlContent(),
@@ -124,8 +161,8 @@ class VimeoVideoPlayer extends StatelessWidget {
       ),
       onConsoleMessage: (controller, consoleMessage) {
         final message = consoleMessage.message;
-        dev.log('onConsoleMessage :: $message');
         if (message.startsWith('vimeo:')) {
+          debugPrint("On console message: $message");
           _manageVimeoPlayerEvent(message.substring(6));
         }
       },
@@ -133,6 +170,24 @@ class VimeoVideoPlayer extends StatelessWidget {
       onLoadStart: onInAppWebViewLoadStart,
       onLoadStop: onInAppWebViewLoadStop,
       onReceivedError: onInAppWebViewReceivedError,
+      onEnterFullscreen: (controller) {
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.landscapeRight,
+          DeviceOrientation.landscapeLeft,
+        ]);
+        if (onEnterFullscreen != null) {
+          onEnterFullscreen?.call(controller);
+        }
+      },
+      onExitFullscreen: (controller) {
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown,
+        ]);
+        if (onExitFullscreen != null) {
+          onExitFullscreen?.call(controller);
+        }
+      },
     );
   }
 
@@ -183,6 +238,7 @@ class VimeoVideoPlayer extends StatelessWidget {
           player.on('pause', () => console.log('vimeo:onPause'));
           player.on('ended', () => console.log('vimeo:onFinish'));
           player.on('seeked', () => console.log('vimeo:onSeek'));
+          player.on('timeupdate', (data) => console.log('vimeo:currentPosition:' + data.seconds));
         </script>
       </body>
     </html>
@@ -198,12 +254,20 @@ class VimeoVideoPlayer extends StatelessWidget {
         '&title=$showTitle'
         '&byline=$showByline'
         '&controls=$showControls'
-        '&dnt=$enableDNT';
+        '&dnt=$enableDNT'
+        '${privacyHash != null ? '&h=$privacyHash' : ''}'
+        '&portrait=$portrait'
+        '&badge=${!badge}'
+        '&playsinline=${!enableFullScreenOnPlay}';
   }
 
   /// Manage vimeo player events received from the WebView
   void _manageVimeoPlayerEvent(String event) {
     debugPrint('Vimeo event: $event');
+    if (currentPositionInSeconds != null && event.contains("currentPosition")) {
+      final position = event.split(":").last.trim();
+      currentPositionInSeconds?.call(double.tryParse(position) ?? 0);
+    }
     switch (event) {
       case 'onReady':
         onReady?.call();
@@ -220,12 +284,15 @@ class VimeoVideoPlayer extends StatelessWidget {
       case 'onSeek':
         onSeek?.call();
         break;
+      case 'onLoadStop':
+        debugPrint("chrome load stop");
+        break;
     }
   }
 
   /// Converts Color to a hexadecimal string
   String _colorToHex(Color color) {
-    final hex = color.value.toRadixString(16).padLeft(8, '0');
+    final hex = color.toARGB32().toRadixString(16).padLeft(8, '0');
     return '#${hex.substring(2)}'; // Remove the leading 'ff' for opacity
   }
 }
