@@ -38,6 +38,7 @@ dependencies:
   # and to open an in-app browser window.
   # https://pub.dev/packages/flutter_inappwebview
   flutter_inappwebview: ^6.1.5
+  web: ^1.0.0
 
 dev_dependencies:
   flutter_test:

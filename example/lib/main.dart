@@ -49,6 +49,11 @@ class _MyHomePageState extends State<MyHomePage> {
               onInAppWebViewCreated: (controller) {
                 webViewController = controller;
               },
+              onReady: () {
+                setState(() {
+                  isVideoLoading = false;
+                });
+              },
               onInAppWebViewLoadStart: (controller, url) {
                 setState(() {
                   isVideoLoading = true;
@@ -60,8 +65,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 });
               },
             ),
-            if (isVideoLoading)
-              const Center(child: CircularProgressIndicator()),
+            if (isVideoLoading) const Center(child: CircularProgressIndicator()),
           ],
         ),
       ),

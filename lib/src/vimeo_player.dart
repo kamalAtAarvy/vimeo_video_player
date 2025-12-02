@@ -1,9 +1,14 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:vimeo_video_player/mobile/web_listener_stub.dart'
+if (dart.library.js_interop) 'package:vimeo_video_player/web/web_listener_web.dart';
+
+
 
 /// Vimeo video player with customizable controls and event callbacks using the InAppWebView
-class VimeoVideoPlayer extends StatelessWidget {
+class VimeoVideoPlayer extends StatefulWidget {
   /// Defines the vimeo video ID to be played
   ///
   /// [videoId] is required and cannot be empty
@@ -146,6 +151,20 @@ class VimeoVideoPlayer extends StatelessWidget {
   }) : assert(videoId.isNotEmpty, 'videoId cannot be empty!');
 
   @override
+  State<VimeoVideoPlayer> createState() => _VimeoVideoPlayerState();
+}
+
+class _VimeoVideoPlayerState extends State<VimeoVideoPlayer> {
+
+  @override
+  void initState() {
+    super.initState();
+    setupWebListener((event) {
+      _manageVimeoPlayerEvent(event);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return InAppWebView(
       initialSettings: InAppWebViewSettings(
@@ -159,24 +178,29 @@ class VimeoVideoPlayer extends StatelessWidget {
         data: _buildHtmlContent(),
         baseUrl: WebUri("https://player.vimeo.com"),
       ),
-      onConsoleMessage: (controller, consoleMessage) {
-        final message = consoleMessage.message;
-        if (message.startsWith('vimeo:')) {
-          debugPrint("On console message: $message");
-          _manageVimeoPlayerEvent(message.substring(6));
+      onWebViewCreated: (controller) {
+        widget.onInAppWebViewCreated!(controller);
+        if (!kIsWeb) {
+          // Handle JavaScript callbacks
+          controller.addJavaScriptHandler(
+            handlerName: 'onVimeoEvent',
+            callback: (args) {
+              String event = args.isNotEmpty ? args[0].toString() : "unknown";
+              _manageVimeoPlayerEvent(event);
+            },
+          );
         }
       },
-      onWebViewCreated: onInAppWebViewCreated,
-      onLoadStart: onInAppWebViewLoadStart,
-      onLoadStop: onInAppWebViewLoadStop,
-      onReceivedError: onInAppWebViewReceivedError,
+      onLoadStart: widget.onInAppWebViewLoadStart,
+      onLoadStop: widget.onInAppWebViewLoadStop,
+      onReceivedError: widget.onInAppWebViewReceivedError,
       onEnterFullscreen: (controller) {
         SystemChrome.setPreferredOrientations([
           DeviceOrientation.landscapeRight,
           DeviceOrientation.landscapeLeft,
         ]);
-        if (onEnterFullscreen != null) {
-          onEnterFullscreen?.call(controller);
+        if (widget.onEnterFullscreen != null) {
+          widget.onEnterFullscreen?.call(controller);
         }
       },
       onExitFullscreen: (controller) {
@@ -184,8 +208,8 @@ class VimeoVideoPlayer extends StatelessWidget {
           DeviceOrientation.portraitUp,
           DeviceOrientation.portraitDown,
         ]);
-        if (onExitFullscreen != null) {
-          onExitFullscreen?.call(controller);
+        if (widget.onExitFullscreen != null) {
+          widget.onExitFullscreen?.call(controller);
         }
       },
     );
@@ -201,7 +225,7 @@ class VimeoVideoPlayer extends StatelessWidget {
           body {
             margin: 0;
             padding: 0;
-            background-color: ${_colorToHex(backgroundColor)};
+            background-color: ${_colorToHex(widget.backgroundColor)};
           }
           .video-container {
             position: relative;
@@ -217,75 +241,80 @@ class VimeoVideoPlayer extends StatelessWidget {
           }
         </style>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <script src="https://player.vimeo.com/api/player.js"></script>
-      </head>
-      <body>
-        <div class="video-container">
-          <iframe 
-            id="player"
-            src="${_buildIframeUrl()}"
-            frameborder="0"
-            allow="autoplay; fullscreen; picture-in-picture"
-            allowfullscreen 
+      <script src="https://player.vimeo.com/api/player.js"></script>
+    </head>
+    <body>
+      <iframe id="vimeoPlayer" src="${_buildIframeUrl()}" 
+      frameborder="0" allow="autoplay; fullscreen; picture-in-picture"allowfullscreen 
             webkitallowfullscreen 
             mozallowfullscreen>
-          </iframe>
-        </div>
-        <script>
-          const player = new Vimeo.Player('player');
-          player.ready().then(() => console.log('vimeo:onReady'));
-          player.on('play', () => console.log('vimeo:onPlay'));
-          player.on('pause', () => console.log('vimeo:onPause'));
-          player.on('ended', () => console.log('vimeo:onFinish'));
-          player.on('seeked', () => console.log('vimeo:onSeek'));
-          player.on('timeupdate', (data) => console.log('vimeo:currentPosition:' + data.seconds));
-        </script>
-      </body>
+      </iframe>
+
+      <script>
+        var iframe = document.getElementById('vimeoPlayer');
+        var player = new Vimeo.Player(iframe);
+
+        function sendEventToFlutter(eventName) {
+          if (window.flutter_inappwebview) {
+            // Mobile (Android/iOS)
+            window.flutter_inappwebview.callHandler('onVimeoEvent', eventName);
+          } else {
+            // Web
+            window.parent.postMessage({ vimeoEvent: eventName }, "*");
+          }
+        }
+
+        player.on('play', function() { sendEventToFlutter('onPlay'); });
+        player.on('pause', function() { sendEventToFlutter('onPause'); });
+        player.on('loaded', function() { sendEventToFlutter('onReady'); });
+        player.on('seeked', function() { sendEventToFlutter('onSeek'); });
+        player.on('ended', function() { sendEventToFlutter('onFinish'); });
+        player.on('timeupdate', function(data) {
+          sendEventToFlutter('currentPosition:' + data.seconds);
+        });
+      </script>
+    </body>
     </html>
     ''';
   }
 
   /// Builds the iframe URL
   String _buildIframeUrl() {
-    return 'https://player.vimeo.com/video/$videoId?'
-        'autoplay=$isAutoPlay'
-        '&loop=$isLooping'
-        '&muted=$isMuted'
-        '&title=$showTitle'
-        '&byline=$showByline'
-        '&controls=$showControls'
-        '&dnt=$enableDNT'
-        '${privacyHash != null ? '&h=$privacyHash' : ''}'
-        '&portrait=$portrait'
-        '&badge=${!badge}'
-        '&playsinline=${!enableFullScreenOnPlay}';
+    return 'https://player.vimeo.com/video/${widget.videoId}?'
+        'autoplay=${widget.isAutoPlay.toFlag()}'
+        '&loop=${widget.isLooping.toFlag()}'
+        '&muted=${widget.isMuted.toFlag()}'
+        '&byline=${widget.showByline.toFlag()}'
+        '&controls=${widget.showControls.toFlag()}'
+        '&dnt=${widget.enableDNT.toFlag()}'
+        '${widget.privacyHash != null ? '&h=${widget.privacyHash}' : ''}'
+        '&portrait=${widget.portrait.toFlag()}'
+        '&badge=${(!widget.badge).toFlag()}'
+        '&playsinline=${(!widget.enableFullScreenOnPlay).toFlag()}';
   }
 
   /// Manage vimeo player events received from the WebView
   void _manageVimeoPlayerEvent(String event) {
     debugPrint('Vimeo event: $event');
-    if (currentPositionInSeconds != null && event.contains("currentPosition")) {
+    if (widget.currentPositionInSeconds != null && event.contains("currentPosition")) {
       final position = event.split(":").last.trim();
-      currentPositionInSeconds?.call(double.tryParse(position) ?? 0);
+      widget.currentPositionInSeconds?.call(double.tryParse(position) ?? 0);
     }
     switch (event) {
       case 'onReady':
-        onReady?.call();
+        widget.onReady?.call();
         break;
       case 'onPlay':
-        onPlay?.call();
+        widget.onPlay?.call();
         break;
       case 'onPause':
-        onPause?.call();
+        widget.onPause?.call();
         break;
       case 'onFinish':
-        onFinish?.call();
+        widget.onFinish?.call();
         break;
       case 'onSeek':
-        onSeek?.call();
-        break;
-      case 'onLoadStop':
-        debugPrint("chrome load stop");
+        widget.onSeek?.call();
         break;
     }
   }
@@ -295,4 +324,8 @@ class VimeoVideoPlayer extends StatelessWidget {
     final hex = color.toARGB32().toRadixString(16).padLeft(8, '0');
     return '#${hex.substring(2)}'; // Remove the leading 'ff' for opacity
   }
+}
+
+extension BoolToFlag on bool {
+  String toFlag() => this ? "1" : "0";
 }
