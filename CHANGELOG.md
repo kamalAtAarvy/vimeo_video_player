@@ -1,3 +1,16 @@
+## 1.0.2
+* Fixed the issues.
+    - [#51](https://github.com/Mindinventory/vimeo_video_player/issues/51)
+    - [#52](https://github.com/Mindinventory/vimeo_video_player/issues/52)
+    - [#53](https://github.com/Mindinventory/vimeo_video_player/issues/53)
+    - [#55](https://github.com/Mindinventory/vimeo_video_player/issues/55)
+    - [#56](https://github.com/Mindinventory/vimeo_video_player/issues/56)
+    - [#62](https://github.com/Mindinventory/vimeo_video_player/issues/62)
+    - [#63](https://github.com/Mindinventory/vimeo_video_player/issues/63)
+* Added InAppWebView callbacks: `onEnterFullscreen`, `onExitFullscreen`,
+  `currentPositionInSeconds`, and `onInAppWebViewReceivedError` to enhance event handling.
+* Updated the library details.
+
 ## 1.0.1
 
 * Added InAppWebView callbacks: `onInAppWebViewCreated`, `onInAppWebViewLoadStart`,
