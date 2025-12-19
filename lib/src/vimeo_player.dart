@@ -121,6 +121,9 @@ class VimeoVideoPlayer extends StatefulWidget {
   /// Defines a callback function that notifies current video position
   final ValueChanged<double>? currentPositionInSeconds;
 
+  /// Defines the initial video position in seconds
+  final int? initialPositionInSeconds;
+
   VimeoVideoPlayer({
     super.key,
     required this.videoId,
@@ -148,6 +151,7 @@ class VimeoVideoPlayer extends StatefulWidget {
     this.onEnterFullscreen,
     this.onExitFullscreen,
     this.currentPositionInSeconds,
+    this.initialPositionInSeconds,
   }) : assert(videoId.isNotEmpty, 'videoId cannot be empty!');
 
   @override
@@ -266,7 +270,12 @@ class _VimeoVideoPlayerState extends State<VimeoVideoPlayer> {
 
         player.on('play', function() { sendEventToFlutter('onPlay'); });
         player.on('pause', function() { sendEventToFlutter('onPause'); });
-        player.on('loaded', function() { sendEventToFlutter('onReady'); });
+        player.on('loaded', function() { 
+          sendEventToFlutter('onReady');
+          if (${widget.initialPositionInSeconds != null}) {
+            player.setCurrentTime(${widget.initialPositionInSeconds});
+          }
+        });
         player.on('seeked', function() { sendEventToFlutter('onSeek'); });
         player.on('ended', function() { sendEventToFlutter('onFinish'); });
         player.on('timeupdate', function(data) {

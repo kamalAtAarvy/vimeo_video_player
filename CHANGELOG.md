@@ -1,3 +1,9 @@
+## 1.0.3
+* Fixed the issues.
+    - PR merged: [#64](https://github.com/Mindinventory/vimeo_video_player/issues/64)
+* Added `initialPositionInSeconds` to set the initial video position.
+* Updated the library details.
+
 ## 1.0.2
 * Fixed the issues.
     - [#51](https://github.com/Mindinventory/vimeo_video_player/issues/51)
@@ -123,7 +129,7 @@
 
 * Fixed the issues.
     - [#1](https://github.com/Mindinventory/vimeo_video_player/issues/1) - flick_video_player
-      version is depricated and cause conflict with provider v6.
+      version is deprecated and cause conflict with provider v6.
     - [#2](https://github.com/Mindinventory/vimeo_video_player/issues/2) - It only show video screen
       without the video.
     - [#4](https://github.com/Mindinventory/vimeo_video_player/issues/4) - VideoStream.fromJson is

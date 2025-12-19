@@ -51,9 +51,12 @@ import 'package:vimeo_video_player/vimeo_video_player.dart';
 And add it in its most basic form like it:
 
 ```dart
-VimeoVideoPlayer(
-  videoId: '12860646',
-);
+@override
+Widget build(BuildContext context) {
+  return VimeoVideoPlayer(
+    videoId: '12860646',
+  );
+}
 ```
 
 ### Required parameters of VimeoVideoPlayer
@@ -66,31 +69,40 @@ VimeoVideoPlayer(
 ### Optional parameters of VimeoVideoPlayer with Default value
 ------------
 
-| Parameter              | Default      | Description                                                                                             |
-|------------------------|--------------|---------------------------------------------------------------------------------------------------------|
-| bool isAutoPlay        | false        | Used to auto-play the video once initialized                                                            |
-| bool isLooping         | false        | Used to play the video in a loop after it ends                                                          |
-| bool isMuted           | false        | Used to play the video with the sound muted                                                             |
-| bool showTitle         | false        | Used to display the video title                                                                         |
-| bool showByline        | false        | Used to display the video byline/author                                                                 |
-| bool showControls      | true         | Used to display the video playback controls                                                             |
-| bool enableDNT         | true         | Used to enable Do Not Track (DNT) mode, When enabled, the player will not track any viewing information |
-| Color backgroundColor  | Colors.black | Defines the background color of the InAppWebView                                                        |
+| Parameter                                                                                                                     | Default      | Description                                                                                             |
+|-------------------------------------------------------------------------------------------------------------------------------|--------------|---------------------------------------------------------------------------------------------------------|
+| bool isAutoPlay                                                                                                               | false        | Used to auto-play the video once initialized                                                            |
+| bool isLooping                                                                                                                | false        | Used to play the video in a loop after it ends                                                          |
+| bool isMuted                                                                                                                  | false        | Used to play the video with the sound muted                                                             |
+| bool showTitle                                                                                                                | false        | Used to display the video title                                                                         |
+| bool showByline                                                                                                               | false        | Used to display the video byline/author                                                                 |
+| bool showControls                                                                                                             | true         | Used to display the video playback controls                                                             |
+| bool enableDNT                                                                                                                | true         | Used to enable Do Not Track (DNT) mode, When enabled, the player will not track any viewing information |
+| bool portrait                                                                                                                 | false        | Used to display the profile avatar                                                                      |
+| bool badge                                                                                                                    | false        | Used to display the vimeo logo                                                                          |
+| bool enableFullScreenOnPlay                                                                                                   | false        | Used to enable fullscreen mode when playing. When enabled, the player go full screen when play is hit   |
+| Color backgroundColor                                                                                                         | Colors.black | Defines the background color of the InAppWebView                                                        |
+
 
 ### Optional parameters of VimeoVideoPlayer
 ------------
 
-| Parameter                                                                                                                    | Description                                                                                  |
-|------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------|
-| VoidCallback? onReady                                                                                                        | Defines a callback function triggered when the player is ready to play the video             |
-| VoidCallback? onPlay                                                                                                         | Defines a callback function triggered when the video begins playing                          |
-| VoidCallback? onPause                                                                                                        | Defines a callback function triggered when the video is paused                               |
-| VoidCallback? onFinish                                                                                                       | Defines a callback function triggered when the video playback finishes                       |
-| VoidCallback? onSeek                                                                                                         | Defines a callback function triggered when the video playback position is modified           |
-| Function(InAppWebViewController controller)? onInAppWebViewCreated                                                           | Defines a callback function triggered when the WebView is created                            |
-| Function(InAppWebViewController controller, WebUri? url)? onInAppWebViewLoadStart                                            | Defines a callback function triggered when the WebView starts to load an url                 |
-| Function(InAppWebViewController controller, WebUri? url)? onInAppWebViewLoadStop                                             | Defines a callback function triggered when the WebView finishes loading an url               |
-| Function(InAppWebViewController controller, WebResourceRequest request, WebResourceError error)? onInAppWebViewReceivedError | Defines a callback function triggered when the WebView encounters an error loading a request |
+| Parameter                                                                                                                     | Description                                                                                         |
+|-------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| String? privacyHash                                                                                                           | Used to define the the hash for the unlisted vimeo video                                            |
+| VoidCallback? onReady                                                                                                         | Used to define a callback function triggered when the player is ready to play the video             |
+| VoidCallback? onPlay                                                                                                          | Used to define a callback function triggered when the video begins playing                          |
+| VoidCallback? onPause                                                                                                         | Used to define a callback function triggered when the video is paused                               |
+| VoidCallback? onFinish                                                                                                        | Used to define a callback function triggered when the video playback finishes                       |
+| VoidCallback? onSeek                                                                                                          | Used to define a callback function triggered when the video playback position is modified           |
+| Function(InAppWebViewController controller)? onInAppWebViewCreated                                                            | Used to define a callback function triggered when the WebView is created                            |
+| Function(InAppWebViewController controller, WebUri? uri)? onInAppWebViewLoadStart                                             | Used to define a callback function triggered when the WebView starts to load an url                 |
+| Function(InAppWebViewController controller, WebUri? uri)? onInAppWebViewLoadStop                                              | Used to define a callback function triggered when the WebView finishes loading an url               |
+| Function(InAppWebViewController controller, WebResourceRequest request, WebResourceError? error)? onInAppWebViewReceivedError | Used to define a callback function triggered when the WebView encounters an error loading a request |
+| final void Function(InAppWebViewController controller)? onEnterFullscreen                                                     | Used to define a callback function triggered when the WebView enters full screen                    |
+| final void Function(InAppWebViewController controller)? onExitFullscreen                                                      | Used to define a callback function triggered when the WebView exits full screen                     |
+| final ValueChanged<double>? currentPositionInSeconds                                                                          | Used to define a callback function that notifies current video position                             |
+| int? initialPositionInSeconds                                                                                                 | Used to define the initial video position in seconds                                                |
 
 ## Dependencies
 
