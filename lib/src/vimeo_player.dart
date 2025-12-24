@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:vimeo_video_player/mobile/web_listener_stub.dart'
-if (dart.library.js_interop) 'package:vimeo_video_player/web/web_listener_web.dart';
-
-
+    if (dart.library.js_interop) 'package:vimeo_video_player/web/web_listener_web.dart';
 
 /// Vimeo video player with customizable controls and event callbacks using the InAppWebView
 class VimeoVideoPlayer extends StatefulWidget {
@@ -159,7 +157,6 @@ class VimeoVideoPlayer extends StatefulWidget {
 }
 
 class _VimeoVideoPlayerState extends State<VimeoVideoPlayer> {
-
   @override
   void initState() {
     super.initState();
@@ -330,7 +327,7 @@ class _VimeoVideoPlayerState extends State<VimeoVideoPlayer> {
 
   /// Converts Color to a hexadecimal string
   String _colorToHex(Color color) {
-    final hex = color.toARGB32().toRadixString(16).padLeft(8, '0');
+    final hex = color.value.toRadixString(16).padLeft(8, '0');
     return '#${hex.substring(2)}'; // Remove the leading 'ff' for opacity
   }
 }
